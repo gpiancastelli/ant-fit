@@ -1,0 +1,126 @@
+<?xml version="1.0"?>
+<project name="ant-fit" basedir="." default="unit-test">
+
+	<property name="src.dir" value="src"/>
+	<property name="build.dir" value="build"/>
+	<property name="classes.dir" value="bin"/>
+	<property name="lib.dir" value="lib"/>
+
+	<property name="ant.test.lib" value="ant-testutil.jar"/>
+	<property name="fit.lib" value="fit.jar"/>
+
+	<target name="unit-test" description="Run the unit tests">
+		<junit printsummary="yes" haltonfailure="no">
+			<classpath>
+				<path location="${lib.dir}/${ant.test.lib}"/>
+				<path location="${lib.dir}/${fit.lib}"/>
+				<path location="${classes.dir}"/>
+			</classpath>
+			<test fork="yes" name="org.apache.tools.ant.taskdefs.optional.fit.AllTests"/>
+		</junit>
+	</target>
+
+	<target name="clean" description="Delete all generated files">
+		<delete dir="${build.dir}" failonerror="false" />
+		<delete file="${ant.project.name}.jar"/>
+	</target>
+
+	<target name="compile" description="Compile the Task">
+		<mkdir dir="${build.dir}"/>
+		<javac srcdir="${src.dir}" destdir="${build.dir}"/>
+	</target>
+
+	<target name="jar" depends="compile" description="JAR the Task">
+		<jar destfile="${ant.project.name}.jar" basedir="${build.dir}"/>
+	</target>
+
+	<target name="use.init" description="Define the FIT task">
+		<taskdef name="fit"
+			     classname="org.apache.tools.ant.taskdefs.optional.fit.FitTask"
+			     classpath="${classes.dir}"/>
+	</target>
+
+	<target name="use.without" depends="use.init" description="Use without any">
+		<fit/>
+	</target>
+
+	<target name="use.haltOnFailure" depends="use.init"
+		    description="Use with 'haltonfailure' attribute">
+		<fit haltonfailure="true">
+			<document name="doc/arithmetic.html"/>
+		</fit>
+	</target>
+	
+	<target name="use.haltOnError" depends="use.init"
+		    description="Use with 'haltonerror' attribute">
+		<fit haltonerror="true">
+			<document name="doc/arithmetic.html"/>
+		</fit>
+	</target>
+
+	<target name="use.multipleDocuments" depends="use.init"
+		    description="Use with multiple nested documents">
+		<fit>
+			<document name="doc/arithmetic.html"/>
+			<document name="doc/NetworkExample.html"/>
+		</fit>
+	</target>
+	
+	<target name="use.checkGoodResults" depends="use.init"
+		    description="Check good results for nested document">
+		<fit>
+			<document name="doc/arithmetic.html"
+			          right="37" wrong="10" ignores="0" exceptions="2"/>
+		</fit>
+	</target>
+	
+	<target name="use.checkBadResults" depends="use.init"
+		    description="Check bad results for nested document">
+		<fit>
+			<document name="doc/arithmetic.html" wrong="0" exceptions="0"/>
+		</fit>
+	</target>
+	
+	<target name="use.haltOnMismatch" depends="use.init"
+		    description="Use with 'haltonmismatch' attribute">
+		<fit haltonmismatch="true">
+			<document name="doc/arithmetic.html" right="59"/>
+		</fit>
+	</target>
+	
+	<target name="use.classpathAsNestedElement" depends="use.init"
+		    description="Use with a classpath as a nested element">
+		<fit>
+			<classpath>
+				<path location="${classes.dir}"/>
+			</classpath>
+			<document name="doc/CalculateDiscount.html"/>
+		</fit>
+	</target>
+	
+	<path id="test.path">
+		<pathelement path="${classes.dir}"/>
+	</path>
+	
+	<target name="use.classpathAsAttribute" depends="use.init"
+	        description="Use with a classpath as a reference attribute">
+		<fit classpathref="test.path">
+			<document name="doc/CalculateDiscount.html"/>
+		</fit>
+	</target>
+	
+	<target name="use.dir" depends="use.init"
+	        description="Use with a base directory as the 'dir' attribute">
+		<fit dir="doc">
+			<document name="NetworkExample.html"/>
+		</fit>
+	</target>
+	
+	<target name="use"
+	        description="Run all targets without the failing ones"
+	        depends="use.without, use.multipleDocuments, use.checkGoodResults,
+		             use.checkBadResults, use.classpathAsNestedElement, use.dir,
+		             use.classpathAsAttribute"
+	/>
+
+</project>
